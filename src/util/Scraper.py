@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-import requests
+import urllib.request
 
 class Scraper:
     def __init__(self, address):
@@ -26,14 +26,17 @@ class Scraper:
         return final_code
     
     def scrap_codes(self):
-        list_codes = []
-        page = requests.get(self.get_address())
-        soup = BeautifulSoup(page.content, "html.parser")
-        list(soup.children)
-        codes = soup.find_all('code')
-        for i in range(5):
-            list_codes.append(codes[i].get_text())
-        return list_codes
+        try:
+            list_codes = []
+            text = urllib.request.urlopen(self.get_address()).read()
+            soup = BeautifulSoup(text, 'html.parser')
+            list(soup.children)
+            codes = soup.find_all('code')
+            for i in range(5):
+                list_codes.append(codes[i].get_text())
+            return list_codes
+        except Exception as e:
+            print(f"Error: {e}")
     
     def update_codes(self):
         current_codes = self.get_codes()
