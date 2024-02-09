@@ -40,7 +40,7 @@ class genshin_cog(commands.Cog):
                 await channel.send(f"**My master, your slave found some new codes:**\n\n{self.scraper.print_codes()}\n{user.mention}")
             else:
                 await channel.send("**Couldn't find any new codes today master...**")
-          
-          
-          
-          
+
+
+
+
