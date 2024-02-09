@@ -12,18 +12,17 @@ class Scraper:
     def set_address(self, address):
         self.__address = address
         
-    def get_codes(self):
+    def get_all_codes(self):
         return self.__codes
     
     def set_codes(self, codes):
         self.__codes = codes
     
-    def print_codes(self):
-        codes = self.get_codes()
-        final_code = ""
-        for code in codes:
-            final_code += f"[{code}](<https://genshin.hoyoverse.com/en/gift?code={code}>)\n"
-        return final_code
+    def get_codes(self):
+        ret_list = []
+        for i in range(5):
+            ret_list.append(self.__codes[i])
+        return ret_list
     
     def scrap_codes(self):
         try:
@@ -32,23 +31,23 @@ class Scraper:
             soup = BeautifulSoup(text, 'html.parser')
             list(soup.children)
             codes = soup.find_all('code')
-            for i in range(5):
-                list_codes.append(codes[i].get_text())
+            for code in codes:
+                list_codes.append(code.get_text())
             return list_codes
         except Exception as e:
             print(f"Error: {e}")
     
     def update_codes(self):
-        current_codes = self.get_codes()
-        new_codes = self.scrap_codes()
-        if len(new_codes) == len(current_codes) and len(new_codes) == sum([1 for i, j in zip(new_codes, current_codes) if i == j]):
-            return 0
+        current_codes = self.get_all_codes()
+        updated_codes = self.scrap_codes()
+        if len(updated_codes) == len(current_codes) and len(updated_codes) == sum([1 for i, j in zip(updated_codes, current_codes) if i == j]):
+            return None
         else:
             set1 = set(current_codes)
-            set2 = set(new_codes)
+            set2 = set(updated_codes)
             new_codes = list(set2 - set1)
-            self.set_codes(new_codes)
-            return 1
+            self.set_codes(updated_codes)
+            return new_codes
         
         
         

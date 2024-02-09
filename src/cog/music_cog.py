@@ -1,8 +1,10 @@
 import discord
 import yt_dlp
+import asyncio
+import re
 from discord.ext import commands
 from discord import FFmpegPCMAudio
-import asyncio
+from youtubesearchpython import VideosSearch
 
 class music_cog(commands.Cog):
     def __init__(self, bot):
@@ -24,6 +26,10 @@ class music_cog(commands.Cog):
         
         self.ydl = yt_dlp.YoutubeDL(self.YDL_OPTIONS)
         self.voice_client = None
+        
+    def is_valid_url(self, url):
+        pattern = r'^(http|https):\/\/([\w.-]+)(\.[\w.-]+)+([\/\w\.-]*)*\/?$'
+        return bool(re.match(pattern, url))
         
     async def play_next(self, ctx):
         if not self.is_paused:
@@ -49,7 +55,15 @@ class music_cog(commands.Cog):
                 return
 
             voice_channel = ctx.author.voice.channel
-            song_info = self.ydl.extract_info(query, download=False)
+            
+            if self.is_valid_url(query):
+                song_info = self.ydl.extract_info(query, download=False)
+            else:
+                search = VideosSearch(query, limit=5)
+                result = search.result()
+                url = result.get('result')[0].get('link')
+                song_info = self.ydl.extract_info(url, download=False)
+                
             self.music_queue.append([song_info, voice_channel])
             
             if self.is_playing or self.is_paused:
@@ -60,7 +74,7 @@ class music_cog(commands.Cog):
         except Exception as e:
             print(e)
                     
-    @commands.command(name="pause", aliases=["stop"])
+    @commands.command(name="pause", aliases=["stop", "s"])
     async def pause(self, ctx, *args):
         if self.is_playing:
             self.is_playing = False
@@ -74,7 +88,7 @@ class music_cog(commands.Cog):
             self.is_playing = True
             self.voice_client.resume()
 
-    @commands.command(name="skip", aliases=["s"])
+    @commands.command(name="skip", aliases=["sk"])
     async def skip(self, ctx):
         if self.voice_client is not None:
             self.voice_client.stop()
@@ -87,7 +101,7 @@ class music_cog(commands.Cog):
             ret_str += f"#{i+1} - {self.music_queue[i][0].get('title')}\n"
 
         if ret_str != "":
-            await ctx.send(f"**Queue:**\n```{ret_str}```")
+            await ctx.send(f"**Music Queue:**\n```{ret_str}```")
         else:
             await ctx.send("**No music in queue master...**")
 
